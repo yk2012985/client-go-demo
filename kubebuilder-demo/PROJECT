@@ -1,0 +1,6 @@
+domain: baiding.tech
+layout:
+- go.kubebuilder.io/v3
+projectName: kubebuilder-demo
+repo: client-go-demo/kubebuilder-demo
+version: "3"
