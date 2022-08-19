@@ -3,7 +3,7 @@ kind: App
 metadata:
   name: app-sample
 spec:
-  image: nginx:latest
+  image: nginx:1.7.9
   replicas: 3
-  enable_ingress: false
-  enable_service: false
+  enable_ingress: true
+  enable_service: true
