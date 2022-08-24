@@ -43,6 +43,9 @@ type AppReconciler struct {
 //+kubebuilder:rbac:groups=ingress.baiding.tech,resources=apps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=ingress.baiding.tech,resources=apps/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=ingress.baiding.tech,resources=apps/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -104,11 +107,12 @@ func (r *AppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 				return ctrl.Result{}, err
 			}
 		}
+		if !errors.IsNotFound(err) && app.Spec.EnableService {
+			return ctrl.Result{}, err
+		}
 	} else {
 		if app.Spec.EnableService {
-			if err := r.Update(ctx, service); err != nil {
-				return ctrl.Result{}, err
-			}
+			logger.Info("skip update")
 		} else {
 			if err := r.Delete(ctx, s); err != nil {
 				return ctrl.Result{}, err
@@ -121,9 +125,6 @@ func (r *AppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	//TODO 使用admission校验该值,如果启用了ingress，那么service必须启用
 	//TODO 使用admission设置默认值,默认为false
 	//Fix: 这里会导致Ingress无法被删除
-	if !app.Spec.EnableService {
-		return ctrl.Result{}, nil
-	}
 	ingress := utils.NewIngress(app)
 	if err := controllerutil.SetControllerReference(app, ingress, r.Scheme); err != nil {
 		return ctrl.Result{}, err
@@ -136,11 +137,12 @@ func (r *AppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 				return ctrl.Result{}, err
 			}
 		}
+		if !errors.IsNotFound(err) && app.Spec.EnableIngress {
+			return ctrl.Result{}, err
+		}
 	} else {
 		if app.Spec.EnableIngress {
-			if err := r.Update(ctx, ingress); err != nil {
-				return ctrl.Result{}, err
-			}
+			logger.Info("skip update")
 		} else {
 			if err := r.Delete(ctx, i); err != nil {
 				return ctrl.Result{}, err
@@ -152,6 +154,7 @@ func (r *AppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 }
 
 // SetupWithManager sets up the controller with the Manager.
+// Owns() 删除service、ingress、deployment时，自动重建.
 func (r *AppReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&ingressv1beta1.App{}).

@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 // Package v1beta1 contains API Schema definitions for the ingress v1beta1 API group
-//+kubebuilder:object:generate=true
-//+groupName=ingress.baiding.tech
+// +kubebuilder:object:generate=true
+// +groupName=ingress.baiding.tech
 package v1beta1
 
 import (
