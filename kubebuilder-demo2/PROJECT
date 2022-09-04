@@ -1,0 +1,16 @@
+domain: test0824
+layout:
+- go.kubebuilder.io/v3
+projectName: kubebuilder-demo2
+repo: client-go-demo/kubebuilder-demo2
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: test0824
+  group: test
+  kind: App
+  path: client-go-demo/kubebuilder-demo2/api/v1beta1
+  version: v1beta1
+version: "3"
